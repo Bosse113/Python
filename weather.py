@@ -16,7 +16,7 @@ from rich.align import Align
 
 API_KEY = "5cf8099c0d5875905ddb54096d96efdb"
 
-CITIES = ["Sundbyberg", "Sorunda"]
+CITIES = ["Sundbyberg", "Sorunda", "Ockelbo", "Nacka"]
 
 console = Console()
 
@@ -100,15 +100,22 @@ layout = Layout()
 
 layout.split_column(
     Layout(name="header", size=3),
-    Layout(name="body"),
+    Layout(name="grid"),
     Layout(name="footer", size=3),
 )
+layout["grid"].split_column(
+    Layout(name="top"),
+    Layout(name="bottom")
+)
 
-layout["body"].split_row(
+layout["top"].split_row(
     Layout(name="city1"),
     Layout(name="city2"),
 )
-
+layout["bottom"].split_row(
+    Layout(name="city3"),
+    Layout(name="city4")
+)
 
 # =========================
 # HEADER & FOOTER
@@ -139,6 +146,8 @@ def build():
 
     layout["city1"].update(city_panel(CITIES[0]))
     layout["city2"].update(city_panel(CITIES[1]))
+    layout["city3"].update(city_panel(CITIES[2]))
+    layout["city4"].update(city_panel(CITIES[3]))
 
     layout["footer"].update(build_footer())
 
