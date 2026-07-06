@@ -1,7 +1,7 @@
 import sqlite3
 import tkinter as tk
 from tkinter import messagebox, ttk
-
+# gjord med todo.py och Google Gemini AI
 # --- DATABASFUNKTIONER ---
 def initiera_databas():
     conn = sqlite3.connect("uppgifter_gui.db")
