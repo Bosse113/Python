@@ -2,7 +2,6 @@ import sqlite3
 import tkinter as tk
 from tkinter import messagebox, ttk
 
-#gjord med hjälp av todo.py och Google Gemini AI
 # --- DATABASFUNKTIONER ---
 def initiera_databas():
     conn = sqlite3.connect("uppgifter_gui.db")
@@ -62,7 +61,7 @@ class TodoApp:
         
         self.ent_uppgift = tk.Entry(ram_inmatning, font=("Arial", 12))
         self.ent_uppgift.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
-        self.ent_uppgift.bind("<Return>", lambda event: self.lagg_till()) # Enter-tangent funkar också
+        self.ent_uppgift.bind("<Return>", lambda event: self.lagg_till())
         
         btn_lagg_till = tk.Button(ram_inmatning, text="Lägg till", bg="#4CAF50", fg="white", font=("Arial", 10, "bold"), command=self.lagg_till)
         btn_lagg_till.pack(side=tk.RIGHT)
@@ -71,18 +70,21 @@ class TodoApp:
         ram_lista = tk.Frame(self.root, padx=10, pady=5)
         ram_lista.pack(fill=tk.BOTH, expand=True)
         
-        # Skapar en tabell-vy med kolumner
         self.trv = ttk.Treeview(ram_lista, columns=("ID", "Uppgift", "Status"), show="headings", selectmode="browse")
         self.trv.heading("ID", text="ID")
         self.trv.heading("Uppgift", text="Uppgift")
         self.trv.heading("Status", text="Status")
         
-        # Justera kolumnbredd
         self.trv.column("ID", width=40, anchor=tk.CENTER)
         self.trv.column("Uppgift", width=300, anchor=tk.W)
         self.trv.column("Status", width=100, anchor=tk.CENTER)
         
         self.trv.pack(fill=tk.BOTH, expand=True)
+        
+        # 🎨 HÄR DEFINIERAR VI FÄRGERNA FÖR RADERNA (Tags)
+        # 'foreground' ändrar textfärg, 'background' ändrar radens bakgrund om man hellre vill det
+        self.trv.tag_configure("klar_rad", foreground="#1b5e20", font=("Arial", 10, "italic")) # Mörkgrön + kursiv
+        self.trv.tag_configure("ej_klar_rad", foreground="#b71c1c", font=("Arial", 10, "bold"))  # Mörkröd + fetstilt
         
         # --- Undre sektionen: Knappar ---
         ram_knappar = tk.Frame(self.root, padx=10, pady=10)
@@ -94,36 +96,38 @@ class TodoApp:
         btn_ta_bort = tk.Button(ram_knappar, text="Ta bort", bg="#f44336", fg="white", font=("Arial", 10), command=self.ta_bort)
         btn_ta_bort.pack(side=tk.RIGHT)
         
-        # Läs in data direkt vid start
         self.ladda_data()
 
     def ladda_data(self):
-        """Rensar listan i GUI:t och hämtar färsk data från SQLite."""
-        # Rensa gamla rader i GUI
+        """Rensar listan och hämtar ny data. Applicerar färgtags på raderna."""
         for rad in self.trv.get_children():
             self.trv.delete(rad)
             
-        # Hämta från DB och tryck in i GUI
         for rad in hämta_från_databas():
-            status = "🟢 Klar" if rad[2] == 1 else "🔴 Ej klar"
-            self.trv.insert("", tk.END, values=(rad[0], rad[1], status))
+            if rad[2] == 1:
+                status = "Klar"
+                tagg = "klar_rad"
+            else:
+                status = "Ej klar"
+                tagg = "ej_klar_rad"
+                
+            # Vi skickar med argumentet 'tags' för att färga raden
+            self.trv.insert("", tk.END, values=(rad[0], rad[1], status), tags=(tagg,))
 
     def lagg_till(self):
         titel = self.ent_uppgift.get().strip()
         if titel:
             lagg_till_i_databas(titel)
-            self.ent_uppgift.delete(0, tk.END) # Rensa textfältet
+            self.ent_uppgift.delete(0, tk.END)
             self.ladda_data()
         else:
             messagebox.showwarning("Varning", "Du kan inte lägga till en tom uppgift!")
 
     def hamta_valt_id(self):
-        """Hjälpfunktion för att se vilket ID användaren klickat på i listan."""
         valt_objekt = self.trv.selection()
         if not valt_objekt:
             messagebox.showwarning("Varning", "Du måste välja en uppgift i listan först!")
             return None
-        # Returnerar ID (som ligger på index 0 i värdena)
         return self.trv.item(valt_objekt)['values'][0]
 
     def markera_klar(self):
@@ -139,7 +143,6 @@ class TodoApp:
                 ta_bort_fran_databas(uppgift_id)
                 self.ladda_data()
 
-# --- STARTA PROGRAMMET ---
 if __name__ == "__main__":
     root = tk.Tk()
     app = TodoApp(root)
