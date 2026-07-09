@@ -1,7 +1,7 @@
 import sqlite3
 import tkinter as tk
 from tkinter import messagebox, ttk
-# gjord med todo.py och Google Gemini AI
+
 # --- DATABASFUNKTIONER ---
 def initiera_databas():
     conn = sqlite3.connect("uppgifter_gui.db")
@@ -16,7 +16,7 @@ def initiera_databas():
     conn.commit()
     conn.close()
 
-def hamta_fran_databas():
+def hämta_från_databas():
     conn = sqlite3.connect("uppgifter_gui.db")
     cursor = conn.cursor()
     cursor.execute("SELECT id, titel, klar FROM todos")
@@ -81,17 +81,17 @@ class TodoApp:
         
         self.trv.pack(fill=tk.BOTH, expand=True)
         
-        # 🎨 HÄR DEFINIERAR VI FÄRGERNA FÖR RADERNA (Tags)
-        # 'foreground' ändrar textfärg, 'background' ändrar radens bakgrund om man hellre vill det
-        self.trv.tag_configure("klar_rad", foreground="#1b5e20", font=("Arial", 10, "italic")) # Mörkgrön + kursiv
-        self.trv.tag_configure("ej_klar_rad", foreground="#b71c1c", font=("Arial", 10, "bold"))  # Mörkröd + fetstilt
+        # Färgkonfiguration för rader
+        self.trv.tag_configure("klar_rad", foreground="#1b5e20", font=("Arial", 10, "italic"))
+        self.trv.tag_configure("ej_klar_rad", foreground="#b71c1c", font=("Arial", 10, "bold"))
         
         # --- Undre sektionen: Knappar ---
         ram_knappar = tk.Frame(self.root, padx=10, pady=10)
         ram_knappar.pack(fill=tk.X)
         
-        btn_klar = tk.Button(ram_knappar, text="Markera som klar", bg="#2196F3", fg="white", font=("Arial", 10), command=self.markera_klar)
-        btn_klar.pack(side=tk.LEFT, padx=(0, 5))
+        # Ändrad text till "Ändra status" (växlar mellan klar/ej klar)
+        btn_status = tk.Button(ram_knappar, text="Ändra status (Klar / Ej klar)", bg="#2196F3", fg="white", font=("Arial", 10), command=self.vaxla_status)
+        btn_status.pack(side=tk.LEFT, padx=(0, 5))
         
         btn_ta_bort = tk.Button(ram_knappar, text="Ta bort", bg="#f44336", fg="white", font=("Arial", 10), command=self.ta_bort)
         btn_ta_bort.pack(side=tk.RIGHT)
@@ -103,7 +103,7 @@ class TodoApp:
         for rad in self.trv.get_children():
             self.trv.delete(rad)
             
-        for rad in hamta_fran_databas():
+        for rad in hämta_från_databas():
             if rad[2] == 1:
                 status = "Klar"
                 tagg = "klar_rad"
@@ -111,7 +111,6 @@ class TodoApp:
                 status = "Ej klar"
                 tagg = "ej_klar_rad"
                 
-            # Vi skickar med argumentet 'tags' för att färga raden
             self.trv.insert("", tk.END, values=(rad[0], rad[1], status), tags=(tagg,))
 
     def lagg_till(self):
@@ -123,25 +122,37 @@ class TodoApp:
         else:
             messagebox.showwarning("Varning", "Du kan inte lägga till en tom uppgift!")
 
-    def hamta_valt_id(self):
+    def hamta_vald_rad_info(self):
+        """Hjälpfunktion för att hämta både ID och nuvarande Status från vald rad."""
         valt_objekt = self.trv.selection()
         if not valt_objekt:
             messagebox.showwarning("Varning", "Du måste välja en uppgift i listan först!")
-            return None
-        return self.trv.item(valt_objekt)['values'][0]
+            return None, None
+        
+        id_varde = self.trv.item(valt_objekt)['values'][0]
+        status_varde = self.trv.item(valt_objekt)['values'][2]
+        return id_varde, status_varde
 
-    def markera_klar(self):
-        uppgift_id = self.hamta_valt_id()
+    def vaxla_status(self):
+        """Kollar nuvarande status och ändrar till motsatsen i databasen."""
+        uppgift_id, nuvarande_status = self.hamta_vald_rad_info()
+        
         if uppgift_id:
-            uppdatera_i_databas(uppgift_id, 1)
+            # Om den var "Klar", sätt till 0 (Ej klar). Annars sätt till 1 (Klar).
+            ny_status = 0 if nuvarande_status == "Klar" else 1
+            uppdatera_i_databas(uppgift_id, ny_status)
             self.ladda_data()
 
     def ta_bort(self):
-        uppgift_id = self.hamta_valt_id()
-        if uppgift_id:
-            if messagebox.askyesno("Bekräfta", "Är du säker på att du vill ta bort uppgiften?"):
-                ta_bort_fran_databas(uppgift_id)
-                self.ladda_data()
+        valt_objekt = self.trv.selection()
+        if not valt_objekt:
+            messagebox.showwarning("Varning", "Du måste välja en uppgift i listan först!")
+            return
+            
+        uppgift_id = self.trv.item(valt_objekt)['values'][0]
+        if messagebox.askyesno("Bekräfta", "Är du säker på att du vill ta bort uppgiften?"):
+            ta_bort_fran_databas(uppgift_id)
+            self.ladda_data()
 
 if __name__ == "__main__":
     root = tk.Tk()
