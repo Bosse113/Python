@@ -16,7 +16,7 @@ def initiera_databas():
     conn.commit()
     conn.close()
 
-def hämta_från_databas():
+def hamta_från_databas():
     conn = sqlite3.connect("uppgifter_gui.db")
     cursor = conn.cursor()
     cursor.execute("SELECT id, titel, klar FROM todos")
@@ -103,7 +103,7 @@ class TodoApp:
         for rad in self.trv.get_children():
             self.trv.delete(rad)
             
-        for rad in hämta_från_databas():
+        for rad in hamta_från_databas():
             if rad[2] == 1:
                 status = "Klar"
                 tagg = "klar_rad"
