@@ -50,7 +50,7 @@ def ta_bort_fran_databas(uppgift_id):
 class TodoApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Att göra-lista med SQLite")
+        self.root.title("ToDo")
         self.root.geometry("500x450")
         
         initiera_databas()
